@@ -68,7 +68,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: ${{ inputs.source_repository || 'jhaizhou-ops/d2r-mobile' }}
-          ref: ${{ inputs.source_ref || 'e2a0c9a9b5d65f6cd505e967e4760e2745e90ca8' }}
+          ref: ${{ inputs.source_ref || 'afad65c895386a96dfb863f2317e41d61222a5a9' }}
           path: upstream
           persist-credentials: false
       - name: Record selected source and apply local test patches
