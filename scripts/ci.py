@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlparse
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = json.loads((ROOT / 'build-config.json').read_text())
 DM = Path(os.environ.get('DM_ROOT', str(ROOT / '.dm-work')))
-GAME = DM / 'data/switch/3.3.94012/Update'
+GAME = DM / 'data/switch' / CONFIG['game_version'] / 'Update'
 TOOLS = ROOT / '.tools'
 WORK = ROOT / '.downloads'
 RAW = ROOT / '.game-downloads'
@@ -133,14 +133,15 @@ def validate_game(game=GAME):
     for name, expected in CONFIG['nso_sha256'].items():
         path = game / 'ExeFS' / name
         if not path.is_file() or sha256(path) != expected:
-            raise ValueError(f'ExeFS/{name} is not the original 3.3.94012 program')
+            raise ValueError(f'ExeFS/{name} is not the original {CONFIG["game_version"]} program')
     for name, length in resource_sizes().items():
         path = game / 'RomFS/data' / name
         if not path.is_file() or path.stat().st_size != length:
             raise ValueError(f'Resource missing or incomplete: {name}')
     if not (game / 'RomFS/data/build_manifest.psv').is_file():
         raise ValueError('RomFS/data/build_manifest.psv missing')
-    print('Game verified: 3 original NSO hashes and 18 archive sizes match 3.3.94012')
+    print(f'Game verified: {len(CONFIG["nso_sha256"])} original NSO hashes and '
+          f'{len(resource_sizes())} archive sizes match {CONFIG["game_version"]}')
 
 
 def run(args, logfile, env=None):

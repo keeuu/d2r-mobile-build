@@ -89,13 +89,14 @@ def export_resources(game=ci.GAME, output=None, manifest=None):
             sums = ''.join(f"{f['sha256']}  data/{f['name']}\n" for f in files)
             archive.writestr(f'{folder}/SHA256SUMS.txt', sums)
             archive.writestr(f'{folder}/README.txt',
-                'D2R Mobile 游戏资源（游戏版本 3.3.94012 / Switch 更新 1.0.34.0）\n\n'
+                f'D2R Mobile 游戏资源（游戏版本 {ci.CONFIG["game_version"]} / '
+                f'Switch 更新 {ci.CONFIG["switch_version"]}）\n\n'
                 '1. 在电脑上解压本 ZIP，得到 D2R Mobile Resources 文件夹。\n'
                 '2. 用数据线连接 iPhone，打开 Finder → iPhone → 文件。\n'
                 '3. 将整个 D2R Mobile Resources 文件夹拖入 D2R Mobile 应用。\n'
                 '   也可放入手机 文件 → 我的 iPhone → D2R Mobile。\n'
                 '4. 打开应用，点击重试。首次启动等待着色器编译完成。\n\n'
-                'data 文件夹包含完整的 18 个 .data 文件，合计约 5.56GB。\n'
+                f'data 文件夹包含完整的 {len(files)} 个 .data 文件。\n'
                 '无需向手机复制游戏包、ExeFS 或任何密钥。\n'
                 '正常覆盖安装时请保持应用标识一致；卸载应用会删除资源和存档。\n')
         # Read every compressed member back and compare with the source digest.

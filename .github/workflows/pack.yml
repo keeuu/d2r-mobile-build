@@ -64,11 +64,26 @@ jobs:
         run: |
           [[ "$INPUT_REVISION" =~ ^[A-Za-z0-9._-]{1,64}$ ]] || exit 1
           python -m unittest discover -s tests -v
+      - name: Resolve pinned upstream inputs
+        id: pin
+        run: |
+          python - <<'PYCODE'
+          import json, os, re, sys
+          config = json.load(open('build-config.json'))
+          commit = config['upstream_commit']
+          if not re.fullmatch(r'[0-9a-f]{40}', commit):
+              print('::error::build-config.json upstream_commit must be a full 40-character commit SHA', file=sys.stderr)
+              raise SystemExit(1)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write(f'commit={commit}\n')
+          print('Pinned upstream commit:', commit)
+          print('Game version:', config['game_version'])
+          PYCODE
       - name: Checkout matching upstream release
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: ${{ inputs.source_repository || 'jhaizhou-ops/d2r-mobile' }}
-          ref: ${{ inputs.source_ref || 'afad65c895386a96dfb863f2317e41d61222a5a9' }}
+          ref: ${{ inputs.source_ref || steps.pin.outputs.commit }}
           path: upstream
           persist-credentials: false
       - name: Record selected source and apply local test patches
@@ -163,15 +178,12 @@ jobs:
         with:
           path: .tools
           key: ${{ steps.tools.outputs.cache-primary-key }}
-      - name: Restore verified game files
-        if: ${{ !inputs.prepare_only }}
-        id: game
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: .dm-work/data/switch/3.3.94012/Update
-          key: game-${{ runner.os }}-${{ hashFiles('build-config.json') }}-${{ inputs.input_revision }}
+      # The extracted game payload is deliberately not cached: at roughly the same
+      # size as the download cache it cannot coexist with it inside GitHub's 10 GB
+      # per-repository budget, so caching it would evict the downloads and force a
+      # full re-download on every run. The raw downloads are cached instead.
       - name: Restore complete original downloads
-        if: ${{ !inputs.prepare_only && steps.game.outputs.cache-hit != 'true' }}
+        if: ${{ !inputs.prepare_only }}
         id: downloads
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
@@ -183,13 +195,13 @@ jobs:
           GAME_INPUT_MANIFEST: ${{ secrets.GAME_INPUT_MANIFEST }}
         run: python scripts/ci.py downloads
       - name: Cache complete downloads BEFORE extraction
-        if: ${{ !inputs.prepare_only && steps.game.outputs.cache-hit != 'true' && steps.downloads.outputs.cache-hit != 'true' }}
+        if: ${{ !inputs.prepare_only && steps.downloads.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .game-downloads
           key: ${{ steps.downloads.outputs.cache-primary-key }}
       - name: Confirm original downloads are stored before extraction
-        if: ${{ !inputs.prepare_only && steps.game.outputs.cache-hit != 'true' }}
+        if: ${{ !inputs.prepare_only }}
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .game-downloads
@@ -304,7 +316,6 @@ jobs:
         if: success()
         env:
           PREPARE_ONLY: ${{ inputs.prepare_only }}
-          GAME_CACHE_HIT: ${{ steps.game.outputs.cache-hit }}
           DOWNLOAD_CACHE_HIT: ${{ steps.downloads.outputs.cache-hit }}
           GENERATED_CACHE_HIT: ${{ steps.generated.outputs.cache-hit }}
           SHADER_CACHE_HIT: ${{ steps.shaders.outputs.cache-hit }}
@@ -320,7 +331,6 @@ jobs:
                   f.write('Matching game payload and native source inputs verified; macOS compiles the App next.\n')
               else:
                   f.write('Unsigned IPA built and verified; see the artifact and build-report.json.\n')
-                  f.write('Game cache hit: ' + os.environ['GAME_CACHE_HIT'] + '\n\n')
                   f.write('Original download cache hit: ' + os.environ['DOWNLOAD_CACHE_HIT'] + '\n\n')
                   f.write('Generated cache hit: ' + os.environ['GENERATED_CACHE_HIT'] + '\n\n')
                   f.write('Shader cache hit: ' + os.environ['SHADER_CACHE_HIT'] + '\n\n')

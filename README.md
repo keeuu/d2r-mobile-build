@@ -2,20 +2,22 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-[![Build IPA](https://github.com/jiayx/d2r-mobile-build/actions/workflows/pack.yml/badge.svg)](https://github.com/jiayx/d2r-mobile-build/actions/workflows/pack.yml)
+[![Build IPA](https://github.com/keeuu/d2r-mobile-build/actions/workflows/pack.yml/badge.svg)](https://github.com/keeuu/d2r-mobile-build/actions/workflows/pack.yml)
 
 Build unsigned IPAs and the required game data with GitHub Actions, using the **NO_XCODE** approach from [jhaizhou-ops/d2r-mobile](https://github.com/jhaizhou-ops/d2r-mobile). Download a build from Releases or run your own build below.
 
+> **Updating an existing install:** install the new IPA over the app — **do not uninstall first** — and your game data does not need to be downloaded again. Do not use builds made from upstream v1.0.16: upstream withdrew that release because items could be lost from the personal stash and duplicated by the iCloud shared-stash merge.
+
 ## Download and install
 
-Open the **[latest Release](https://github.com/jiayx/d2r-mobile-build/releases/latest)**. Download an IPA from **Assets**, then use the links in the release notes to download the required game data:
+Open the **[latest Release](https://github.com/keeuu/d2r-mobile-build/releases/latest)**. Download an IPA from **Assets**, then use the links in the release notes to download the required game data:
 
 **Already have game data installed?** Read [Updating and reusing game data](#4-updating-and-reusing-game-data) before downloading it again.
 
 | File | Where | Purpose |
 | --- | --- | --- |
-| `D2RMobile-v1.0.14.ipa` | Assets | iOS 26+; sign and install with a tool listed below |
-| `D2RMobile-v1.0.14-ios18.ipa` | Assets | iOS 18–25, Metal 3 compatibility build |
+| `D2RMobile-v1.0.18.ipa` | Assets | iOS 26+; sign and install with a tool listed below |
+| `D2RMobile-v1.0.18-ios18.ipa` | Assets | iOS 18–25, Metal 3 compatibility build |
 | `Legacy-Device-Pack.zip` | Legacy Device Pack link in the release notes | Additional textures for A16 and earlier devices; about 1 GB |
 | `D2R-Mobile-Resources.zip.001`, `.002`, `.003` | Game data links in the release notes | Download all three resource parts, totaling about 5.42 GB |
 | `Resources-Parts-SHA256SUMS.txt`, `Resources-SHA256SUMS.txt` | Game data links in the release notes | Verify the parts and combined ZIP |
@@ -25,7 +27,7 @@ The `Source code` archives are build scripts, not the installation package.
 
 ### 1. Install the IPA
 
-Choose by system: **iOS 26+** uses `D2RMobile-v1.0.14.ipa`; **iOS 18–25** uses `D2RMobile-v1.0.14-ios18.ipa`. The compatibility build can also be tested on iOS 26+ when investigating graphics problems; it is not a confirmed fix for system crashes.
+Choose by system: **iOS 26+** uses `D2RMobile-v1.0.18.ipa`; **iOS 18–25** uses `D2RMobile-v1.0.18-ios18.ipa`. The compatibility build can also be tested on iOS 26+ when investigating graphics problems; it is not a confirmed fix for system crashes.
 
 Both packages support **A17 Pro and newer chips, M-series iPads, and A16 and earlier chips with the matching Legacy Device Pack**. Older devices still need enough memory; support does not guarantee every model runs reliably.
 
@@ -68,11 +70,11 @@ Connect your iPhone by cable. In **Finder → iPhone → Files → D2R Mobile**,
 
 For **A16 and earlier devices**, also download `Legacy-Device-Pack.zip` from the link in this IPA Release. Extract it and copy the entire `Legacy Device Pack` folder beside `D2R Mobile Resources` inside the app. Use the pack linked by your IPA Release; both system variants share that pack. A17 Pro and newer devices and M-series iPads do not need it.
 
-Open the app and tap **Retry**. On the first launch, wait for shader compilation to finish. The reference time is **about 6 minutes on iPhone 17 Pro Max**; other devices vary. The current v1.0.14 package has not yet been verified on a physical device.
+Open the app and tap **Retry**. On the first launch, wait for shader compilation to finish. The reference time is **about 6 minutes on iPhone 17 Pro Max**; other devices vary. The current v1.0.18 package has not yet been verified on a physical device.
 
 ### 4. Updating and reusing game data
 
-**Game data downloaded with v1.0.1 or v1.0.6 can be reused with the v1.0.14 IPA. You do not need to download it again.**
+**Game data already imported for an earlier build of this repository can be reused; you do not need to download it again.** The release notes state the **Resource ID** of the data a build needs. If it matches the data on your phone, only the IPA changes.
 
 If the `D2R Mobile Resources` folder is already imported on your phone, just install the new IPA over the existing app with the same app identifier. Your resources and saves are usually preserved; no resource import is needed. **Do not uninstall the app first, as this deletes them.** If you have only downloaded the resources, combine, extract and import them using steps 2 and 3 above.
 
@@ -82,7 +84,7 @@ For future updates, check the new Release's resource requirements before replaci
 
 | Component | Version |
 | --- | --- |
-| Upstream | v1.0.14 |
+| Upstream | v1.0.18 |
 | Switch update | `1.0.34.0` / `v2228224` |
 | Internal game version | `3.3.94012` |
 | Required edition | Includes Reign of the Warlock |
@@ -93,7 +95,33 @@ For future updates, check the new Release's resource requirements before replaci
 
 Click **Fork** to create your copy, then open **Actions** and enable workflows if prompted. Use game files and keys you are authorized to use.
 
-### 2. Configure the input
+This README and the badge link to `keeuu/d2r-mobile-build`. If you fork the repository, replace `keeuu` with your own account in those links, and in the release instructions above, so they point at your Releases rather than someone else's.
+
+### 2. Move to a new upstream release
+
+The build repository pins the upstream release in exactly one place, `build-config.json`: the source commit and the SHA256 of both upstream **shell build inputs**. The workflows read the commit from that file, so the checked-out source and the shell cannot drift apart.
+
+Upstream publishes a new release every few days. One command moves the pin:
+
+```bash
+python scripts/bump_upstream.py            # the latest upstream release
+python scripts/bump_upstream.py v1.0.19    # or one specific tag
+python scripts/bump_upstream.py --check    # re-verify the current pin, change nothing
+```
+
+Nothing is written until the new release passes every check the build itself will rely on: both shell build inputs must match the release's own `SHA256SUMS.txt`; both shells must report the same program requirement, shader digest and content manifest, so one generated payload can serve both; the pinned source must still provide every file the build reads; and `romfs_validate.c` must still list 18 resource archives. Then it rewrites `build-config.json` and both READMEs and runs the test suite.
+
+If the tool reports that the game version moved, the published Data no longer matches and the next build has to regenerate and re-upload the resource archives — pass a fresh `input_revision` for that. If the game version did not move, the existing Data is reused and nothing is re-uploaded.
+
+After it succeeds:
+
+```bash
+git add -A && git commit -m "Update pinned upstream to v1.0.19" && git push
+```
+
+then run the **Build D2R Mobile IPA** workflow with `publish_release` enabled.
+
+### 3. Configure the input
 
 In your repository, open **Settings → Secrets and variables → Actions → New repository secret**. Name it **`GAME_INPUT_MANIFEST`** and paste the complete JSON below. The download URLs and SHA256 values are already filled in:
 
@@ -117,7 +145,7 @@ In your repository, open **Settings → Secrets and variables → Actions → Ne
 
 The torrent contains the base game and update, selected by `select: [1, 2]`. `key_archive` is the ZIP containing extraction keys. No separate `PROD_KEYS` Secret is needed with this configuration.
 
-### 3. Run the build
+### 4. Run the build
 
 Open **Actions → Build D2R Mobile IPA → Run workflow**, select `main`, and use:
 

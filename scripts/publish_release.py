@@ -95,7 +95,11 @@ def release_title():
 
 
 def publish_complete(repo, tag, notes, title=None, latest=True):
-    args = ['release', 'edit', tag, '--repo', repo, '--notes-file', notes, '--draft=false', '--latest=' + str(latest).lower()]
+    # resource_reference() refuses a prerelease release, so clear the flag while
+    # publishing: otherwise a release ever marked prerelease could never be reused
+    # or verified again, and every later run would re-upload the whole bundle.
+    args = ['release', 'edit', tag, '--repo', repo, '--notes-file', notes,
+            '--draft=false', '--prerelease=false', '--latest=' + str(latest).lower()]
     if title is not None:
         args += ['--title', title]
     gh(*args)

@@ -2,20 +2,22 @@
 
 [English](README.md) | **简体中文**
 
-[![Build IPA](https://github.com/jiayx/d2r-mobile-build/actions/workflows/pack.yml/badge.svg)](https://github.com/jiayx/d2r-mobile-build/actions/workflows/pack.yml)
+[![Build IPA](https://github.com/keeuu/d2r-mobile-build/actions/workflows/pack.yml/badge.svg)](https://github.com/keeuu/d2r-mobile-build/actions/workflows/pack.yml)
 
 基于 [jhaizhou-ops/d2r-mobile](https://github.com/jhaizhou-ops/d2r-mobile) 的 **NO_XCODE** 方案，使用 GitHub Actions 构建未签名 IPA 和配套 Data 资源。可以从 Releases 下载，也可以按下方步骤自行构建。
 
+> **已有安装的升级方式：** 直接覆盖安装新 IPA——**不要先卸载应用**——Data 无需重新下载。不要使用基于上游 v1.0.16 构建的包：上游已撤回该版本，原因是个人仓库里的物品可能丢失、iCloud 共享仓库并回背包的物品可能重复。
+
 ## 下载与安装
 
-进入 **[最新 Release](https://github.com/jiayx/d2r-mobile-build/releases/latest)**：IPA 从 **Assets 附件**下载，Data 从 Release 正文的**配套 Data**中直接点击下载链接。
+进入 **[最新 Release](https://github.com/keeuu/d2r-mobile-build/releases/latest)**：IPA 从 **Assets 附件**下载，Data 从 Release 正文的**配套 Data**中直接点击下载链接。
 
 **手机上已经有 Data？** 请先看[更新 IPA 与复用 Data](#4-更新-ipa-与复用-data)，确认是否需要重新下载。
 
 | 文件 | 下载位置 | 用途 |
 | --- | --- | --- |
-| `D2RMobile-v1.0.14.ipa` | Assets 附件 | iOS 26 及以上，使用下方工具签名安装 |
-| `D2RMobile-v1.0.14-ios18.ipa` | Assets 附件 | iOS 18–25，Metal 3 兼容版 |
+| `D2RMobile-v1.0.18.ipa` | Assets 附件 | iOS 26 及以上，使用下方工具签名安装 |
+| `D2RMobile-v1.0.18-ios18.ipa` | Assets 附件 | iOS 18–25，Metal 3 兼容版 |
 | `Legacy-Device-Pack.zip` | 正文的老设备补充包链接 | A16 及更早设备需要的额外贴图，约 1GB |
 | `D2R-Mobile-Resources.zip.001`、`.002`、`.003` | 正文的配套 Data 链接 | 三个资源分卷，必须全部下载，总计约 5.42GB |
 | `Resources-Parts-SHA256SUMS.txt`、`Resources-SHA256SUMS.txt` | 正文的配套 Data 链接 | 校验分卷与合并后的 ZIP |
@@ -25,7 +27,7 @@
 
 ### 1. 安装 IPA
 
-按系统选择：**iOS 26 及以上**使用 `D2RMobile-v1.0.14.ipa`；**iOS 18–25**使用 `D2RMobile-v1.0.14-ios18.ipa`。排查图形问题时，也可以在 iOS 26 及以上测试兼容版，但它并非已确认的系统崩溃修复。
+按系统选择：**iOS 26 及以上**使用 `D2RMobile-v1.0.18.ipa`；**iOS 18–25**使用 `D2RMobile-v1.0.18-ios18.ipa`。排查图形问题时，也可以在 iOS 26 及以上测试兼容版，但它并非已确认的系统崩溃修复。
 
 两份安装包均支持 **A17 Pro 或更新芯片、M 系列 iPad，以及导入配套老设备补充包的 A16 及更早芯片**。老设备仍需足够内存，不代表每种机型都已验证能稳定运行。
 
@@ -68,11 +70,11 @@ copy /b D2R-Mobile-Resources.zip.001+D2R-Mobile-Resources.zip.002+D2R-Mobile-Res
 
 **A16 及更早设备**还需从当前 IPA Release 正文的链接下载 `Legacy-Device-Pack.zip`，解压后把整个 `Legacy Device Pack` 文件夹放进应用，与 `D2R Mobile Resources` 并排。请使用当前 IPA Release 链接的配套补充包，两种系统版本共用这一份。A17 Pro 及更新芯片和 M 系列 iPad 无需导入补充包。
 
-打开应用，点击“重试”。首次启动需等待着色器编译完成，**iPhone 17 Pro Max 参考耗时约 6 分钟**，其他机型耗时不同。当前 v1.0.14 包尚未进行真机运行验证。
+打开应用，点击“重试”。首次启动需等待着色器编译完成，**iPhone 17 Pro Max 参考耗时约 6 分钟**，其他机型耗时不同。当前 v1.0.18 包尚未进行真机运行验证。
 
 ### 4. 更新 IPA 与复用 Data
 
-**v1.0.1 或 v1.0.6 下载的 Data 可以直接用于 v1.0.14 IPA，无需重新下载。**
+**此前为旧版本导入过的 Data 可以继续使用，无需重新下载。** Release 正文会写明该版本需要的**资源标识（Resource ID）**：与手机上已有的 Data 一致时，只需更换 IPA。
 
 如果手机上已经导入 `D2R Mobile Resources` 文件夹，保持应用标识不变，直接覆盖安装新版 IPA 即可，通常会保留资源和存档，无需再次导入。**不要先卸载应用，否则资源和存档会被删除。** 如果只是下载了资源、尚未导入，按上方第 2、3 步合并、解压并导入即可。
 
@@ -82,7 +84,7 @@ copy /b D2R-Mobile-Resources.zip.001+D2R-Mobile-Resources.zip.002+D2R-Mobile-Res
 
 | 项目 | 版本 |
 | --- | --- |
-| 上游 | v1.0.14 |
+| 上游 | v1.0.18 |
 | Switch 更新 | `1.0.34.0` / `v2228224` |
 | 游戏内部版本 | `3.3.94012` |
 | 所需版本 | 包含「术士君临」资料片 |
@@ -93,7 +95,33 @@ copy /b D2R-Mobile-Resources.zip.001+D2R-Mobile-Resources.zip.002+D2R-Mobile-Res
 
 点击 **Fork** 创建自己的副本，打开 **Actions**，如有提示则启用工作流。请仅使用自己有权使用的游戏文件和密钥。
 
-### 2. 配置输入
+本 README 和状态徽章的链接指向 `keeuu/d2r-mobile-build`。Fork 之后请把其中的 `keeuu` 换成自己的账号（包括上方 Release 说明里的链接），使其指向你自己的 Release，而不是别人的。
+
+### 2. 升级到新的上游版本
+
+上游版本只在一处固定：`build-config.json` 中的源码提交和两个上游**壳构建原料**的 SHA256。工作流从该文件读取提交号，因此检出的源码和壳不会对不上。
+
+上游每隔几天就会发新版本，升级只要一条命令：
+
+```bash
+python scripts/bump_upstream.py            # 最新上游版本
+python scripts/bump_upstream.py v1.0.19    # 或指定某个 tag
+python scripts/bump_upstream.py --check    # 只校验当前 pin，不修改任何文件
+```
+
+在通过构建本身依赖的全部检查之前，它不会写入任何文件：两个壳构建原料必须与发布自带的 `SHA256SUMS.txt` 一致；两个壳必须报告相同的程序版本、着色器摘要和内容清单（这样一份生成产物可以同时给两个壳用）；固定的源码必须仍提供构建读取的每个文件；`romfs_validate.c` 必须仍然是 18 个资源包。之后它才会改写 `build-config.json` 和两份 README，并运行测试套件。
+
+如果工具报告游戏版本变了，说明已发布的 Data 不再匹配，下次构建必须重新生成并上传资源包——这时要传一个新的 `input_revision`。游戏版本没变则复用已有 Data，不会重新上传。
+
+成功之后：
+
+```bash
+git add -A && git commit -m "Update pinned upstream to v1.0.19" && git push
+```
+
+再运行 **Build D2R Mobile IPA** 工作流，并启用 `publish_release`。
+
+### 3. 配置输入
 
 在自己的仓库进入 **Settings → Secrets and variables → Actions → New repository secret**，名称填写 **`GAME_INPUT_MANIFEST`**，完整粘贴以下 JSON。下载地址和 SHA256 已填好：
 
@@ -117,7 +145,7 @@ copy /b D2R-Mobile-Resources.zip.001+D2R-Mobile-Resources.zip.002+D2R-Mobile-Res
 
 种子中包含本体与更新包，`select: [1, 2]` 选择这两项；`key_archive` 是包含解包密钥的 ZIP。使用这份配置，无需另外填写 `PROD_KEYS` Secret。
 
-### 3. 运行构建
+### 4. 运行构建
 
 进入 **Actions → Build D2R Mobile IPA → Run workflow**，选择 `main`，使用下表参数：
 
