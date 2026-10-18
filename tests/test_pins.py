@@ -68,6 +68,16 @@ class PinnedReleaseTests(unittest.TestCase):
                 self.assertNotIn(ci.CONFIG['game_version'], text)
                 self.assertNotIn(ci.CONFIG['switch_version'], text)
 
+    def test_the_shell_toolchain_is_pinned_with_a_version(self):
+        # The shell only accepts shaders from one exact spirv-cross build. Pinning
+        # the version next to the commit lets the bump tool notice a toolchain
+        # change before a 20 minute build fails on a shader digest mismatch.
+        self.assertRegex(ci.CONFIG['spirv_cross_version'], r'^\d+(\.\d+){2,}$')
+        self.assertRegex(ci.CONFIG['spirv_commit'], r'^[0-9a-f]{40}$')
+        tools = (ROOT / 'scripts/tools.sh').read_text()
+        self.assertIn('spirv_commit', tools, 'tools.sh must read the pin from build-config.json')
+        self.assertNotIn(ci.CONFIG['spirv_commit'], tools, 'The spirv-cross commit must not be hardcoded')
+
     def test_cache_revision_default_tracks_the_game_version(self):
         defaults = set(re.findall(r'default: (game-\S+)',
                                   (ROOT / '.github/workflows/pack.yml').read_text()))

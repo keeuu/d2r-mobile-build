@@ -41,6 +41,10 @@ SOURCE_FILES = ('dm/PRODUCT', 'dm/host/romfs_validate.c', 'dm/gfx/tools/dmsh_cha
 MANIFEST_SUFFIX = '/dm/shell_manifest.txt'
 INFO_SUFFIX = '/dm/shell_info.txt'
 INFO_KEYS = {'PRODUCT', 'CHAIN', 'KIND', 'SHADER_SRC', 'SPIRV_CROSS'}
+# shell_info.txt reports the spirv-cross build the shell's shaders came from, and
+# every release tags that build in this repository.
+SPIRV_REPO = 'KhronosGroup/SPIRV-Cross'
+SPIRV_TAG = 'vulkan-sdk-{version}'
 
 
 def gh(*args):
@@ -136,6 +140,18 @@ def verify(repo, tag, dest, require_official):
     print(f'  both shells: PRODUCT={first_info["PRODUCT"]} CHAIN={first_info["CHAIN"]} '
           f'SHADER_SRC={first_info["SHADER_SRC"]}, identical manifest')
 
+    # The shell only accepts shaders translated by one exact spirv-cross build; a
+    # mismatched toolchain fails deep in the IPA build with a shader digest error.
+    wanted = first_info['SPIRV_CROSS']
+    toolchain = ci.CONFIG.get('spirv_cross_version')
+    if wanted != toolchain:
+        tool_commit = resolve_commit(SPIRV_REPO, SPIRV_TAG.format(version=wanted))
+        print(f'  spirv-cross: shell wants {wanted}, config pinned {toolchain} -> {tool_commit[:12]}')
+        toolchain = wanted
+    else:
+        tool_commit = ci.CONFIG['spirv_commit']
+        print(f'  spirv-cross: {toolchain} matches the pinned toolchain')
+
     sources = {path: source_file(repo, commit, path) for path in SOURCE_FILES}
     product = sources['dm/PRODUCT'].strip()
     if first_info['PRODUCT'] != product:
@@ -151,7 +167,8 @@ def verify(repo, tag, dest, require_official):
     print(f'  source: PRODUCT={product}, 18 resource archives, 1 shader rule set')
 
     return {'upstream_commit': commit, 'shell_sha256': digests[SHELL_ASSETS[0]],
-            'ios18_shell_sha256': digests[SHELL_ASSETS[1]], 'game_version': product.split('-', 1)[0]}
+            'ios18_shell_sha256': digests[SHELL_ASSETS[1]], 'game_version': product.split('-', 1)[0],
+            'spirv_commit': tool_commit, 'spirv_cross_version': toolchain}
 
 
 def rewrite(path, replacements, dry_run):
@@ -191,11 +208,10 @@ def main():
                      require_official=not (args.check or args.accept_unverified_hashes))
 
     if args.check:
-        for key in ('upstream_commit', 'shell_sha256', 'ios18_shell_sha256'):
-            state = 'OK  ' if config[key] == pin[key] else 'DRIFT'
-            print(f'  {state} {key}: pinned {config[key]}')
-        if config['game_version'] != pin['game_version']:
-            print(f"  DRIFT game_version: config {config['game_version']} != shell {pin['game_version']}")
+        for key in ('upstream_commit', 'shell_sha256', 'ios18_shell_sha256', 'spirv_commit',
+                    'spirv_cross_version', 'game_version'):
+            state = 'OK   ' if config.get(key) == pin[key] else 'DRIFT'
+            print(f'  {state} {key}: pinned {config.get(key)}')
         return 0
 
     base = f'https://github.com/{repo}/releases/download/{tag}/'
@@ -205,6 +221,8 @@ def main():
         'shell_sha256': pin['shell_sha256'],
         'ios18_shell_url': base + SHELL_ASSETS[1],
         'ios18_shell_sha256': pin['ios18_shell_sha256'],
+        'spirv_commit': pin['spirv_commit'],
+        'spirv_cross_version': pin['spirv_cross_version'],
     }
     if config['game_version'] != pin['game_version']:
         changes['game_version'] = pin['game_version']

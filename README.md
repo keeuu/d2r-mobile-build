@@ -111,6 +111,8 @@ python scripts/bump_upstream.py --check    # re-verify the current pin, change n
 
 Nothing is written until the new release passes every check the build itself will rely on: both shell build inputs must match the release's own `SHA256SUMS.txt`; both shells must report the same program requirement, shader digest and content manifest, so one generated payload can serve both; the pinned source must still provide every file the build reads; and `romfs_validate.c` must still list 18 resource archives. Then it rewrites `build-config.json` and both READMEs and runs the test suite.
 
+The shell also records the exact `spirv-cross` build its shaders were translated with, and only that build's output is accepted. The tool pins that build too, so a release that moves the toolchain also moves `spirv_commit`; the next run then rebuilds the tools and re-translates the shaders instead of failing on a shader digest mismatch.
+
 If the tool reports that the game version moved, the published Data no longer matches and the next build has to regenerate and re-upload the resource archives — pass a fresh `input_revision` for that. If the game version did not move, the existing Data is reused and nothing is re-uploaded.
 
 After it succeeds:
